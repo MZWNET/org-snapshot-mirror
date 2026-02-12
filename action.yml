@@ -1,0 +1,43 @@
+name: Org Snapshot Mirror
+description: Create snapshot mirrors of GitHub organization repos to target Git service (only latest commit per branch)
+author: MZWNET
+
+inputs:
+  source_org:
+    description: Source GitHub organization name
+    required: true
+  source_token:
+    description: GitHub token for accessing source repos
+    required: true
+  source_repos:
+    description: YAML array of repo names to sync (whitelist)
+    required: true
+  target_url:
+    description: "Target Git URL prefix (e.g., https://cnb.cool/MZWNET/AviumUI/)"
+    required: true
+  target_username:
+    description: Username for target Git authentication
+    required: true
+  target_password:
+    description: Password/token for target Git authentication
+    required: true
+  target_platform:
+    description: "Target platform type: cnb | other"
+    default: other
+  cnb_api_token:
+    description: CNB API token (required if target_platform is cnb)
+    required: false
+  cnb_org_path:
+    description: "CNB organization path for repo creation (e.g., MZWNET/AviumUI)"
+    required: false
+  max_parallel:
+    description: Maximum parallel sync jobs
+    default: "4"
+
+runs:
+  using: node24
+  main: dist/index.js
+
+branding:
+  icon: copy
+  color: blue
