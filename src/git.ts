@@ -255,8 +255,13 @@ export async function pushLfs(
 }
 
 export async function installLfs(): Promise<void> {
-  const result = await execGit(["lfs", "install"], ".");
-  if (result.exitCode !== 0) {
-    core.warning(`LFS install warning: ${result.stderr}`);
+  const installResult = await execGit(["lfs", "install"], ".");
+  if (installResult.exitCode !== 0) {
+    core.warning(`LFS install warning: ${installResult.stderr}`);
+  }
+
+  const configResult = await execGit(["config", "--global", "lfs.locksverify", "true"], ".");
+  if (configResult.exitCode !== 0) {
+    core.warning(`LFS config warning: ${configResult.stderr}`);
   }
 }
