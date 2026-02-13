@@ -1,6 +1,5 @@
 import * as core from "@actions/core";
 import pLimit from "p-limit";
-import { parse as parseYaml } from "yaml";
 
 import { createCnbRepo } from "./cnb.js";
 import {
@@ -33,11 +32,11 @@ interface ActionInputs {
 }
 
 function getInputs(): ActionInputs {
-  const sourceReposYaml = core.getInput("source_repos", { required: true });
-  const sourceRepos = parseYaml(sourceReposYaml) as string[];
+  const sourceReposJson = core.getInput("source_repos", { required: true });
+  const sourceRepos = JSON.parse(sourceReposJson) as string[];
 
   if (!Array.isArray(sourceRepos)) {
-    throw new TypeError("source_repos must be a YAML array");
+    throw new TypeError("source_repos must be a JSON array");
   }
 
   const targetPlatform = core.getInput("target_platform") || "other";

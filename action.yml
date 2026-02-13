@@ -1,6 +1,6 @@
 name: Org Snapshot Mirror
 description: Create snapshot mirrors of GitHub organization repos to target Git service (only latest commit per branch)
-author: MZWNET
+author: mzwing
 
 inputs:
   source_org:
@@ -10,7 +10,7 @@ inputs:
     description: GitHub token for accessing source repos
     required: true
   source_repos:
-    description: YAML array of repo names to sync (whitelist)
+    description: 'JSON array of repo names to sync (e.g., ["repo1", "repo2"])'
     required: true
   target_url:
     description: "Target Git URL prefix (e.g., https://cnb.cool/MZWNET/AviumUI/)"

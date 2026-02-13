@@ -22,8 +22,7 @@
     "@actions/core": "^3.0.0",
     "@actions/exec": "^3.0.0",
     "@octokit/rest": "^22.0.1",
-    "p-limit": "^7.3.0",
-    "yaml": "^2.8.2"
+    "p-limit": "^7.3.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^7.4.3",
