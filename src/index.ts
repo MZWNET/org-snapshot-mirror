@@ -180,10 +180,13 @@ async function run(): Promise<void> {
     core.info(`\nSync completed: ${succeeded} succeeded, ${failed} failed`);
 
     if (failed > 0) {
-      const failedRepos = inputs.sourceRepos.filter(
-        (_, i) => !results[i].success,
-      );
-      core.setFailed(`Failed to sync repos: ${failedRepos.join(", ")}`);
+      core.info("\nFailed repos:");
+      for (let i = 0; i < results.length; i++) {
+        if (!results[i].success) {
+          core.error(`  - ${inputs.sourceRepos[i]}: ${results[i].error}`);
+        }
+      }
+      core.setFailed(`Failed to sync ${failed} repos`);
     }
   }
   catch (error) {
