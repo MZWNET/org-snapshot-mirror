@@ -223,6 +223,9 @@ export async function pushToTarget(
   // Add remote
   await execGit(["remote", "add", "target", authUrl], repoDir);
 
+  // Configure LFS locksverify for this remote
+  await execGit(["config", `lfs.${targetUrl}/info/lfs.locksverify`, "true"], repoDir);
+
   // Push branches
   const pushResult = await execGit(
     ["push", "target", "--force", "refs/heads/*:refs/heads/*", "refs/tags/*:refs/tags/*"],
