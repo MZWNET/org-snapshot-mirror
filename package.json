@@ -13,7 +13,7 @@
   ],
   "main": "dist/index.js",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --outfile=dist/index.js",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --outfile=dist/index.js --minify --tree-shaking=true",
     "typecheck": "tsgo --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"

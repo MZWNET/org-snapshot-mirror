@@ -8,7 +8,10 @@ export default antfu({
     quotes: "double",
     semi: true,
   },
-  ignores: ["dist/**", "node_modules/**"],
+  ignores: [
+    "dist/**",
+    "node_modules/**",
+  ],
   rules: {
     "no-console": "off",
     "ts/no-explicit-any": "warn",
