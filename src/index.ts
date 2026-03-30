@@ -76,7 +76,7 @@ async function syncRepo(
 
     // Create repo on CNB if needed
     if (inputs.targetPlatform === "cnb") {
-      if (!inputs.cnbApiToken || !inputs.cnbOrgPath) {
+      if (inputs.cnbApiToken === undefined || inputs.cnbOrgPath === undefined) {
         throw new Error(
           "cnb_api_token and cnb_org_path are required for CNB platform",
         );
@@ -144,7 +144,7 @@ async function syncRepo(
     return { success: false, error: errorMessage };
   }
   finally {
-    if (tempDir) {
+    if (tempDir !== null) {
       await cleanupDir(tempDir);
     }
   }
@@ -167,8 +167,8 @@ async function run(): Promise<void> {
 
     // Sync all repos in parallel (with limit)
     const results = await Promise.all(
-      inputs.sourceRepos.map(repoName =>
-        limit(() => syncRepo(repoName, inputs)),
+      inputs.sourceRepos.map(async repoName =>
+        limit(async () => syncRepo(repoName, inputs)),
       ),
     );
 
@@ -194,4 +194,4 @@ async function run(): Promise<void> {
   }
 }
 
-run();
+void run();

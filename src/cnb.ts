@@ -14,7 +14,7 @@ export async function createCnbRepo(
 
   const payload = {
     name: repoName,
-    description: description || `Mirror of GitHub repo ${repoName}`,
+    description: description ?? `Mirror of GitHub repo ${repoName}`,
     visibility: "public",
   };
 

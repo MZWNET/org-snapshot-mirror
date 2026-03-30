@@ -1,8 +1,12 @@
+import type { TypedFlatConfigItem } from "@antfu/eslint-config";
+import type { FlatConfigComposer } from "eslint-flat-config-utils";
 import antfu from "@antfu/eslint-config";
 
-export default antfu({
+const config: FlatConfigComposer<TypedFlatConfigItem> = antfu({
   type: "lib",
-  typescript: true,
+  typescript: {
+    tsconfigPath: "tsconfig.json",
+  },
   stylistic: {
     indent: 2,
     quotes: "double",
@@ -17,3 +21,5 @@ export default antfu({
     "ts/no-explicit-any": "warn",
   },
 });
+
+export default config;

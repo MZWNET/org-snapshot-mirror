@@ -14,7 +14,7 @@ export async function cleanupDir(dir: string): Promise<void> {
     await fs.rm(dir, { recursive: true, force: true });
   }
   catch (error) {
-    core.warning(`Failed to cleanup directory ${dir}: ${error}`);
+    core.warning(`Failed to cleanup directory ${dir}: ${String(error)}`);
   }
 }
 
