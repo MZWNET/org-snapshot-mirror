@@ -22,8 +22,8 @@ async function run(): Promise<void> {
 
     // Sync all repos in parallel (with limit)
     const results = await Promise.all(
-      inputs.sourceRepos.map(async repoName =>
-        limit(async () => syncRepo(repoName, inputs)),
+      inputs.sourceRepos.map(async repo =>
+        limit(async () => syncRepo(repo, inputs)),
       ),
     );
 
@@ -37,7 +37,7 @@ async function run(): Promise<void> {
       core.info("\nFailed repos:");
       for (let i = 0; i < results.length; i++) {
         if (!results[i].success) {
-          core.error(`  - ${inputs.sourceRepos[i]}: ${results[i].error}`);
+          core.error(`  - ${inputs.sourceRepos[i].name}: ${results[i].error}`);
         }
       }
       core.setFailed(`Failed to sync ${failed} repos`);

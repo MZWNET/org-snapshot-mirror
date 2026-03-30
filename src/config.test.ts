@@ -18,7 +18,7 @@ describe("config", () => {
           case "source_token":
             return "token";
           case "source_repos":
-            return "[\"repo1\", \"repo2\"]";
+            return "repo1, repo2";
           case "target_url":
             return "https://target.com";
           case "target_username":
@@ -43,7 +43,10 @@ describe("config", () => {
       expect(inputs).toEqual({
         sourceOrg: "org",
         sourceToken: "token",
-        sourceRepos: ["repo1", "repo2"],
+        sourceRepos: [
+          { name: "repo1", branches: undefined },
+          { name: "repo2", branches: undefined },
+        ],
         targetUrl: "https://target.com",
         targetUsername: "user",
         targetPassword: "pass",
@@ -54,6 +57,35 @@ describe("config", () => {
       });
     });
 
+    it("should parse valid inputs with branches", () => {
+      vi.mocked(core.getInput).mockImplementation((name) => {
+        switch (name) {
+          case "source_org":
+            return "org";
+          case "source_token":
+            return "token";
+          case "source_repos":
+            return "repo1:main, repo1:dev, repo2:master, repo3";
+          case "target_url":
+            return "https://target.com";
+          case "target_username":
+            return "user";
+          case "target_password":
+            return "pass";
+          default:
+            return "";
+        }
+      });
+
+      const inputs = getInputs();
+
+      expect(inputs.sourceRepos).toEqual([
+        { name: "repo1", branches: ["main", "dev"] },
+        { name: "repo2", branches: ["master"] },
+        { name: "repo3", branches: undefined },
+      ]);
+    });
+
     it("should parse valid inputs with defaults", () => {
       vi.mocked(core.getInput).mockImplementation((name) => {
         switch (name) {
@@ -62,7 +94,7 @@ describe("config", () => {
           case "source_token":
             return "token";
           case "source_repos":
-            return "[\"repo1\"]";
+            return "repo1";
           case "target_url":
             return "https://target.com";
           case "target_username":
@@ -82,21 +114,21 @@ describe("config", () => {
       expect(inputs.maxParallel).toBe(4); // default is 4
     });
 
-    it("should throw error if source_repos is not an array", () => {
+    it("should throw error if source_repos is empty or only whitespace", () => {
       vi.mocked(core.getInput).mockImplementation((name) => {
         if (name === "source_repos")
-          return "\"not_array\"";
+          return "   ,  ";
         return "";
       });
 
       expect(() => getInputs()).toThrow(TypeError);
-      expect(() => getInputs()).toThrow("source_repos must be a JSON array");
+      expect(() => getInputs()).toThrow("source_repos must contain at least one repository");
     });
 
     it("should throw error if target_platform is invalid", () => {
       vi.mocked(core.getInput).mockImplementation((name) => {
         if (name === "source_repos")
-          return "[\"repo1\"]";
+          return "repo1";
         if (name === "target_platform")
           return "invalid_platform";
         return "";
@@ -104,16 +136,6 @@ describe("config", () => {
 
       expect(() => getInputs()).toThrow(Error);
       expect(() => getInputs()).toThrow("target_platform must be 'cnb' or 'other'");
-    });
-
-    it("should throw error if source_repos JSON is completely invalid", () => {
-      vi.mocked(core.getInput).mockImplementation((name) => {
-        if (name === "source_repos")
-          return "{\"not\": \"array\"}";
-        return "";
-      });
-
-      expect(() => getInputs()).toThrow(TypeError);
     });
   });
 });

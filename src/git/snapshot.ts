@@ -110,12 +110,19 @@ async function createOrphanCommit(
 
 export async function createSnapshotCommits(
   repoDir: string,
+  branchesToSync: string[],
   logPrefix: string,
 ): Promise<void> {
   logWithPrefix(logPrefix, "Creating snapshot commits...");
 
-  const branches = await listBranches(repoDir);
-  logWithPrefix(logPrefix, `Found ${branches.length} branches`);
+  const allBranches = await listBranches(repoDir);
+  const branches = allBranches.filter(b => branchesToSync.includes(b.name));
+  logWithPrefix(logPrefix, `Found ${branches.length} target branches out of ${allBranches.length} total branches`);
+
+  if (branches.length === 0) {
+    logWithPrefix(logPrefix, `Warning: None of the specified branches (${branchesToSync.join(", ")}) were found in the repository.`);
+    return;
+  }
 
   for (const branch of branches) {
     const commitInfo = await getCommitInfo(repoDir, branch.ref);

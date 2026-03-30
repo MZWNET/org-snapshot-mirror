@@ -1,4 +1,4 @@
-import type { ActionInputs } from "./config.js";
+import type { ActionInputs, RepoConfig } from "./config.js";
 import { fetchLfs, pushLfs } from "./git/lfs.js";
 import { createSnapshotCommits } from "./git/snapshot.js";
 import { cloneMirror, pushToTarget } from "./git/sync.js";
@@ -12,9 +12,10 @@ import {
 } from "./utils.js";
 
 export async function syncRepo(
-  repoName: string,
+  repo: RepoConfig,
   inputs: ActionInputs,
 ): Promise<{ success: boolean; error?: string }> {
+  const repoName = repo.name;
   const logPrefix = repoName;
   let tempDir: string | null = null;
 
@@ -26,6 +27,13 @@ export async function syncRepo(
       inputs.sourceOrg,
       repoName,
     );
+
+    // Determine the branches to sync
+    const branchesToSync = repo.branches && repo.branches.length > 0
+      ? repo.branches
+      : [repoInfo.defaultBranch];
+
+    logWithPrefix(logPrefix, `Branches to sync: ${branchesToSync.join(", ")}`);
 
     // Create repo on CNB if needed
     if (inputs.targetPlatform === "cnb") {
@@ -67,7 +75,7 @@ export async function syncRepo(
     await fetchLfs(repoDir, sourceUrl, logPrefix);
 
     // Create snapshot commits
-    await createSnapshotCommits(repoDir, logPrefix);
+    await createSnapshotCommits(repoDir, branchesToSync, logPrefix);
 
     // Build target URL
     let targetRepoUrl = inputs.targetUrl;
@@ -82,6 +90,7 @@ export async function syncRepo(
       targetRepoUrl,
       inputs.targetUsername,
       inputs.targetPassword,
+      branchesToSync,
       logPrefix,
     );
 

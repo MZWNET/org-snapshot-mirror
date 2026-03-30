@@ -17,7 +17,7 @@ vi.mock("./utils.js");
 const defaultInputs = {
   sourceOrg: "org",
   sourceToken: "token",
-  sourceRepos: ["repo1"],
+  sourceRepos: [{ name: "repo1", branches: undefined }],
   targetUrl: "https://target.com",
   targetUsername: "user",
   targetPassword: "pass",
@@ -40,7 +40,7 @@ describe("sync", () => {
   });
 
   it("should successfully sync a repo without CNB", async () => {
-    const result = await syncRepo("repo1", defaultInputs);
+    const result = await syncRepo({ name: "repo1" }, defaultInputs);
 
     expect(result).toEqual({ success: true });
 
@@ -58,12 +58,13 @@ describe("sync", () => {
       "https://token@github.com/org/repo1.git",
       "repo1",
     );
-    expect(createSnapshotCommits).toHaveBeenCalledWith("/tmp/sync-repo1/repo.git", "repo1");
+    expect(createSnapshotCommits).toHaveBeenCalledWith("/tmp/sync-repo1/repo.git", ["main"], "repo1");
     expect(pushToTarget).toHaveBeenCalledWith(
       "/tmp/sync-repo1/repo.git",
       "https://target.com/repo1.git",
       "user",
       "pass",
+      ["main"],
       "repo1",
     );
     expect(pushLfs).toHaveBeenCalledWith("/tmp/sync-repo1/repo.git", "repo1");
@@ -82,7 +83,7 @@ describe("sync", () => {
       cnbOrgPath: "cnb_org",
     };
 
-    const result = await syncRepo("repo1", inputs);
+    const result = await syncRepo({ name: "repo1" }, inputs);
 
     expect(result).toEqual({ success: true });
     expect(createCnbRepo).toHaveBeenCalledWith("cnb_token", "cnb_org", "repo1", "desc");
@@ -94,7 +95,7 @@ describe("sync", () => {
       targetPlatform: "cnb" as const,
     };
 
-    const result = await syncRepo("repo1", inputs);
+    const result = await syncRepo({ name: "repo1" }, inputs);
 
     expect(result.success).toBe(false);
     expect(result.error).toMatch("cnb_api_token and cnb_org_path are required");
@@ -104,7 +105,7 @@ describe("sync", () => {
   it("should safely cleanup if an intermediate step fails", async () => {
     vi.mocked(cloneMirror).mockRejectedValue(new Error("Clone failed"));
 
-    const result = await syncRepo("repo1", defaultInputs);
+    const result = await syncRepo({ name: "repo1" }, defaultInputs);
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("Clone failed");

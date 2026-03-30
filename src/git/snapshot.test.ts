@@ -58,7 +58,7 @@ describe("git/snapshot", () => {
         return { exitCode: 1, stdout: "", stderr: "Unknown command mocked" };
       });
 
-      await createSnapshotCommits("/tmp/repo", "PREFIX");
+      await createSnapshotCommits("/tmp/repo", ["main", "dev"], "PREFIX");
 
       expect(execGit).toHaveBeenCalledWith(
         ["for-each-ref", "--format=%(refname)", "refs/heads/"],
@@ -94,7 +94,7 @@ describe("git/snapshot", () => {
       );
 
       expect(logWithPrefix).toHaveBeenCalledWith("PREFIX", "Creating snapshot commits...");
-      expect(logWithPrefix).toHaveBeenCalledWith("PREFIX", "Found 2 branches");
+      expect(logWithPrefix).toHaveBeenCalledWith("PREFIX", "Found 2 target branches out of 2 total branches");
     });
 
     it("should throw an error if listBranches fails", async () => {
@@ -104,7 +104,7 @@ describe("git/snapshot", () => {
         stderr: "fatal error",
       });
 
-      await expect(createSnapshotCommits("/tmp/repo", "PREFIX"))
+      await expect(createSnapshotCommits("/tmp/repo", ["main"], "PREFIX"))
         .rejects
         .toThrow("Failed to list branches: fatal error");
     });
@@ -128,7 +128,7 @@ describe("git/snapshot", () => {
         return { exitCode: 0, stdout: "test", stderr: "" };
       });
 
-      await expect(createSnapshotCommits("/tmp/repo", "PREFIX"))
+      await expect(createSnapshotCommits("/tmp/repo", ["main"], "PREFIX"))
         .rejects
         .toThrow("Failed to create orphan commit: commit-tree failed");
     });

@@ -1,9 +1,14 @@
 import * as core from "@actions/core";
 
+export interface RepoConfig {
+  name: string;
+  branches?: string[];
+}
+
 export interface ActionInputs {
   sourceOrg: string;
   sourceToken: string;
-  sourceRepos: string[];
+  sourceRepos: RepoConfig[];
   targetUrl: string;
   targetUsername: string;
   targetPassword: string;
@@ -14,11 +19,46 @@ export interface ActionInputs {
 }
 
 export function getInputs(): ActionInputs {
-  const sourceReposJson = core.getInput("source_repos", { required: true });
-  const sourceRepos = JSON.parse(sourceReposJson) as string[];
+  const sourceReposString = core.getInput("source_repos", { required: true });
 
-  if (!Array.isArray(sourceRepos)) {
-    throw new TypeError("source_repos must be a JSON array");
+  const parsedRepos = new Map<string, Set<string>>();
+  for (const item of sourceReposString.split(",")) {
+    const trimmed = item.trim();
+    if (!trimmed)
+      continue;
+
+    // We only want to split at the first colon to grab the repo name
+    const colonIndex = trimmed.indexOf(":");
+    let repoName = trimmed;
+    let branchName: string | undefined;
+
+    if (colonIndex !== -1) {
+      repoName = trimmed.substring(0, colonIndex).trim();
+      const bName = trimmed.substring(colonIndex + 1).trim();
+      if (bName !== "") {
+        branchName = bName;
+      }
+    }
+
+    if (repoName === "")
+      continue;
+
+    if (!parsedRepos.has(repoName)) {
+      parsedRepos.set(repoName, new Set<string>());
+    }
+
+    if (branchName !== undefined) {
+      parsedRepos.get(repoName)!.add(branchName);
+    }
+  }
+
+  const sourceRepos: RepoConfig[] = Array.from(parsedRepos.entries()).map(([name, branchesSet]) => ({
+    name,
+    branches: branchesSet.size > 0 ? Array.from(branchesSet) : undefined,
+  }));
+
+  if (sourceRepos.length === 0) {
+    throw new TypeError("source_repos must contain at least one repository");
   }
 
   const targetPlatform = core.getInput("target_platform") || "other";

@@ -16,12 +16,11 @@
   "scripts": {
     "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --outfile=dist/index.cjs --minify --tree-shaking=true --tsconfig=tsconfig.build.json",
     "knip": "knip",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest",
     "typecheck": "tsgo --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "pnpm run test --coverage"
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@actions/core": "^3.0.0",

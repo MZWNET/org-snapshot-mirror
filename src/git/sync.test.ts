@@ -62,6 +62,7 @@ describe("git/sync", () => {
         "https://target.com",
         "user",
         "pass",
+        ["main"],
         "PREFIX",
       );
 
@@ -81,7 +82,7 @@ describe("git/sync", () => {
 
       // push target
       expect(execGit).toHaveBeenCalledWith(
-        ["push", "target", "--force", "refs/heads/*:refs/heads/*", "refs/tags/*:refs/tags/*"],
+        ["push", "target", "--force", "refs/heads/main:refs/heads/main", "refs/tags/*:refs/tags/*"],
         "/tmp/repo",
       );
 
@@ -99,7 +100,7 @@ describe("git/sync", () => {
       });
 
       await expect(
-        pushToTarget("/tmp/repo", "target", "user", "pass", "PREFIX"),
+        pushToTarget("/tmp/repo", "target", "user", "pass", ["main"], "PREFIX"),
       ).rejects.toThrow("Failed to push: push failed");
     });
   });

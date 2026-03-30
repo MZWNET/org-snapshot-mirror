@@ -24,6 +24,7 @@ export async function pushToTarget(
   targetUrl: string,
   username: string,
   password: string,
+  branchesToSync: string[],
   logPrefix: string,
 ): Promise<void> {
   logWithPrefix(logPrefix, "Pushing to target...");
@@ -36,11 +37,19 @@ export async function pushToTarget(
   // Configure LFS locksverify for this remote
   await execGit(["config", `lfs.${targetUrl}/info/lfs.locksverify`, "true"], repoDir);
 
+  if (branchesToSync.length === 0) {
+    logWithPrefix(logPrefix, "No branches to push");
+    return;
+  }
+
   // Push branches
-  const pushResult = await execGit(
-    ["push", "target", "--force", "refs/heads/*:refs/heads/*", "refs/tags/*:refs/tags/*"],
-    repoDir,
-  );
+  const pushArgs = ["push", "target", "--force"];
+  for (const branch of branchesToSync) {
+    pushArgs.push(`refs/heads/${branch}:refs/heads/${branch}`);
+  }
+  pushArgs.push("refs/tags/*:refs/tags/*");
+
+  const pushResult = await execGit(pushArgs, repoDir);
 
   if (pushResult.exitCode !== 0) {
     throw new Error(`Failed to push: ${pushResult.stderr}`);
