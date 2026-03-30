@@ -18,7 +18,10 @@
     "knip": "knip",
     "typecheck": "tsgo --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "pnpm run test --coverage"
   },
   "dependencies": {
     "@actions/core": "^3.0.0",
@@ -30,11 +33,13 @@
     "@antfu/eslint-config": "^7.7.3",
     "@types/node": "^25.5.0",
     "@typescript/native-preview": "7.0.0-dev.20260329.1",
+    "@vitest/coverage-v8": "4.1.2",
     "esbuild": "^0.27.4",
     "eslint": "^10.1.0",
     "eslint-flat-config-utils": "^3.0.2",
     "jiti": "^2.6.1",
     "knip": "^6.1.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   }
 }
