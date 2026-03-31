@@ -19,6 +19,21 @@ export async function cloneMirror(
   }
 }
 
+export async function getDefaultBranchFromMirror(
+  repoDir: string,
+  logPrefix: string,
+): Promise<string> {
+  logWithPrefix(logPrefix, "Detecting default branch from mirrored repo...");
+
+  const result = await execGit(["symbolic-ref", "HEAD"], repoDir);
+
+  if (result.exitCode !== 0) {
+    throw new Error(`Failed to detect default branch: ${result.stderr}`);
+  }
+
+  return result.stdout.trim().replace(/^refs\/heads\//, "");
+}
+
 export async function pushToTarget(
   repoDir: string,
   targetUrl: string,

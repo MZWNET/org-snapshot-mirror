@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchLfs, pushLfs } from "./git/lfs.js";
 import { createSnapshotCommits } from "./git/snapshot.js";
-import { cloneMirror, pushToTarget } from "./git/sync.js";
+import { cloneMirror, getDefaultBranchFromMirror, pushToTarget } from "./git/sync.js";
 import { createCnbRepo } from "./services/cnb.js";
 import { getRepoInfo } from "./services/github.js";
 import { syncRepo } from "./sync.js";
@@ -37,6 +37,7 @@ describe("sync", () => {
     });
 
     vi.mocked(createTempDir).mockResolvedValue("/tmp/sync-repo1");
+    vi.mocked(getDefaultBranchFromMirror).mockResolvedValue("main");
   });
 
   it("should successfully sync a repo without CNB", async () => {
@@ -87,6 +88,62 @@ describe("sync", () => {
 
     expect(result).toEqual({ success: true });
     expect(createCnbRepo).toHaveBeenCalledWith("cnb_token", "cnb_org", "repo1", "desc");
+  });
+
+  it("should skip GitHub API for URL repos and use CNB placeholder description", async () => {
+    vi.mocked(createCnbRepo).mockResolvedValue({ success: true, alreadyExists: false });
+
+    const inputs = {
+      ...defaultInputs,
+      targetPlatform: "cnb" as const,
+      cnbApiToken: "cnb_token",
+      cnbOrgPath: "cnb_org",
+    };
+
+    const result = await syncRepo({
+      name: "https://gitlab.com/PixelOS-AOSP/vendor_gms-14",
+    }, inputs);
+
+    expect(result).toEqual({ success: true });
+    expect(getRepoInfo).not.toHaveBeenCalled();
+    expect(createCnbRepo).toHaveBeenCalledWith("cnb_token", "cnb_org", "vendor_gms-14", "111");
+    expect(cloneMirror).toHaveBeenCalledWith(
+      "https://gitlab.com/PixelOS-AOSP/vendor_gms-14.git",
+      "/tmp/sync-repo1/repo.git",
+      "https://gitlab.com/PixelOS-AOSP/vendor_gms-14",
+    );
+    expect(getDefaultBranchFromMirror).toHaveBeenCalledWith(
+      "/tmp/sync-repo1/repo.git",
+      "https://gitlab.com/PixelOS-AOSP/vendor_gms-14",
+    );
+    expect(pushToTarget).toHaveBeenCalledWith(
+      "/tmp/sync-repo1/repo.git",
+      "https://target.com/vendor_gms-14.git",
+      "user",
+      "pass",
+      ["main"],
+      "https://gitlab.com/PixelOS-AOSP/vendor_gms-14",
+    );
+  });
+
+  it("should resolve owner/repo sources through GitHub API using the provided owner", async () => {
+    const result = await syncRepo({ name: "PixelOS-AOSP/vendor_gms-14" }, defaultInputs);
+
+    expect(result).toEqual({ success: true });
+    expect(getRepoInfo).toHaveBeenCalledWith("token", "PixelOS-AOSP", "vendor_gms-14");
+    expect(cloneMirror).toHaveBeenCalledWith(
+      "https://token@github.com/PixelOS-AOSP/vendor_gms-14.git",
+      "/tmp/sync-repo1/repo.git",
+      "PixelOS-AOSP/vendor_gms-14",
+    );
+    expect(pushToTarget).toHaveBeenCalledWith(
+      "/tmp/sync-repo1/repo.git",
+      "https://target.com/vendor_gms-14.git",
+      "user",
+      "pass",
+      ["main"],
+      "PixelOS-AOSP/vendor_gms-14",
+    );
   });
 
   it("should use explicitly configured branches and preserve a target URL that already ends with slash", async () => {

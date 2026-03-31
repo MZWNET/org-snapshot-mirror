@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildAuthUrl, logWithPrefix } from "../utils.js";
 import { execGit } from "./core.js";
-import { cloneMirror, pushToTarget } from "./sync.js";
+import { cloneMirror, getDefaultBranchFromMirror, pushToTarget } from "./sync.js";
 
 vi.mock("../utils.js", () => ({
   logWithPrefix: vi.fn(),
@@ -102,6 +102,34 @@ describe("git/sync", () => {
       await expect(
         pushToTarget("/tmp/repo", "target", "user", "pass", ["main"], "PREFIX"),
       ).rejects.toThrow("Failed to push: push failed");
+    });
+  });
+
+  describe("getDefaultBranchFromMirror", () => {
+    it("should resolve the default branch from HEAD", async () => {
+      vi.mocked(execGit).mockResolvedValue({
+        exitCode: 0,
+        stdout: "refs/heads/main\n",
+        stderr: "",
+      });
+
+      const branch = await getDefaultBranchFromMirror("/tmp/repo", "PREFIX");
+
+      expect(branch).toBe("main");
+      expect(execGit).toHaveBeenCalledWith(["symbolic-ref", "HEAD"], "/tmp/repo");
+      expect(logWithPrefix).toHaveBeenCalledWith("PREFIX", "Detecting default branch from mirrored repo...");
+    });
+
+    it("should throw when HEAD cannot be resolved", async () => {
+      vi.mocked(execGit).mockResolvedValue({
+        exitCode: 1,
+        stdout: "",
+        stderr: "not a symbolic ref",
+      });
+
+      await expect(getDefaultBranchFromMirror("/tmp/repo", "PREFIX"))
+        .rejects
+        .toThrow("Failed to detect default branch: not a symbolic ref");
     });
   });
 });
