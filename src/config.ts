@@ -18,28 +18,39 @@ export interface ActionInputs {
   maxParallel: number;
 }
 
+function parseRepoItem(item: string): { repoName: string; branchName?: string } | undefined {
+  const trimmed = item.trim();
+  if (!trimmed)
+    return undefined;
+
+  const lastColonIndex = trimmed.lastIndexOf(":");
+  const lastSlashIndex = trimmed.lastIndexOf("/");
+  if (lastColonIndex <= 0 || lastColonIndex < lastSlashIndex)
+    return { repoName: trimmed };
+
+  const candidateRepoName = trimmed.substring(0, lastColonIndex).trim();
+  const candidateBranchName = trimmed.substring(lastColonIndex + 1).trim();
+
+  if (candidateBranchName && !candidateRepoName.endsWith("/")) {
+    return {
+      repoName: candidateRepoName,
+      branchName: candidateBranchName,
+    };
+  }
+
+  return { repoName: trimmed };
+}
+
 export function getInputs(): ActionInputs {
   const sourceReposString = core.getInput("source_repos", { required: true });
 
   const parsedRepos = new Map<string, Set<string>>();
   for (const item of sourceReposString.split(",")) {
-    const trimmed = item.trim();
-    if (!trimmed)
+    const parsedItem = parseRepoItem(item);
+    if (!parsedItem)
       continue;
 
-    // We only want to split at the first colon to grab the repo name
-    const colonIndex = trimmed.indexOf(":");
-    let repoName = trimmed;
-    let branchName: string | undefined;
-
-    if (colonIndex !== -1) {
-      repoName = trimmed.substring(0, colonIndex).trim();
-      const bName = trimmed.substring(colonIndex + 1).trim();
-      if (bName !== "") {
-        branchName = bName;
-      }
-    }
-
+    const { repoName, branchName } = parsedItem;
     if (repoName === "")
       continue;
 

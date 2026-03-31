@@ -10,7 +10,7 @@ inputs:
     description: GitHub token for accessing source repos
     required: true
   source_repos:
-    description: 'Comma separated list of repo names to sync (e.g., "repo1:branch1, repo2"). If no branch is specified, it syncs the default branch.'
+    description: 'Comma separated list of repos to sync. Supports "repo", "owner/repo:branch", and "https://host/owner/repo:branch" (e.g., "repo1:branch1, PixelOS-AOSP/vendor_gms-14:fourteen, https://gitlab.com/PixelOS-AOSP/vendor_gms-14:fourteen"). If no branch is specified, it syncs the default branch.'
     required: true
   target_url:
     description: "Target Git URL prefix (e.g., https://cnb.cool/MZWNET/AviumUI/)"

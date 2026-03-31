@@ -86,6 +86,100 @@ describe("config", () => {
       ]);
     });
 
+    it("should parse source_repos with URL and owner/repo branch suffixes", () => {
+      vi.mocked(core.getInput).mockImplementation((name) => {
+        switch (name) {
+          case "source_org":
+            return "org";
+          case "source_token":
+            return "token";
+          case "source_repos":
+            return "https://gitlab.com/PixelOS-AOSP/vendor_gms-14:fourteen, PixelOS-AOSP/vendor_gms-14:fourteen, https://gitlab.com/PixelOS-AOSP/frameworks_base";
+          case "target_url":
+            return "https://target.com";
+          case "target_username":
+            return "user";
+          case "target_password":
+            return "pass";
+          default:
+            return "";
+        }
+      });
+
+      const inputs = getInputs();
+
+      expect(inputs.sourceRepos).toEqual([
+        {
+          name: "https://gitlab.com/PixelOS-AOSP/vendor_gms-14",
+          branches: ["fourteen"],
+        },
+        {
+          name: "PixelOS-AOSP/vendor_gms-14",
+          branches: ["fourteen"],
+        },
+        {
+          name: "https://gitlab.com/PixelOS-AOSP/frameworks_base",
+          branches: undefined,
+        },
+      ]);
+    });
+
+    it("should deduplicate repos and branches while preserving repos without branches", () => {
+      vi.mocked(core.getInput).mockImplementation((name) => {
+        switch (name) {
+          case "source_org":
+            return "org";
+          case "source_token":
+            return "token";
+          case "source_repos":
+            return "repo1:main, repo1:main, repo1:dev, repo2, repo2";
+          case "target_url":
+            return "https://target.com";
+          case "target_username":
+            return "user";
+          case "target_password":
+            return "pass";
+          default:
+            return "";
+        }
+      });
+
+      const inputs = getInputs();
+
+      expect(inputs.sourceRepos).toEqual([
+        { name: "repo1", branches: ["main", "dev"] },
+        { name: "repo2", branches: undefined },
+      ]);
+    });
+
+    it("should treat trailing colon items as repo names instead of empty branches", () => {
+      vi.mocked(core.getInput).mockImplementation((name) => {
+        switch (name) {
+          case "source_org":
+            return "org";
+          case "source_token":
+            return "token";
+          case "source_repos":
+            return "repo1:, https://gitlab.com/org/repo/:";
+          case "target_url":
+            return "https://target.com";
+          case "target_username":
+            return "user";
+          case "target_password":
+            return "pass";
+          default:
+            return "";
+        }
+      });
+
+      const inputs = getInputs();
+
+      expect(inputs.sourceRepos).toEqual([
+        { name: "repo1:", branches: undefined },
+        { name: "https://gitlab.com/org/repo/:", branches: undefined },
+      ]);
+    });
+
     it("should parse valid inputs with defaults", () => {
       vi.mocked(core.getInput).mockImplementation((name) => {
         switch (name) {
@@ -123,6 +217,34 @@ describe("config", () => {
 
       expect(() => getInputs()).toThrow(TypeError);
       expect(() => getInputs()).toThrow("source_repos must contain at least one repository");
+    });
+
+    it("should ignore empty comma-separated entries around valid repos", () => {
+      vi.mocked(core.getInput).mockImplementation((name) => {
+        switch (name) {
+          case "source_org":
+            return "org";
+          case "source_token":
+            return "token";
+          case "source_repos":
+            return "repo1,   , repo2:main,";
+          case "target_url":
+            return "https://target.com";
+          case "target_username":
+            return "user";
+          case "target_password":
+            return "pass";
+          default:
+            return "";
+        }
+      });
+
+      const inputs = getInputs();
+
+      expect(inputs.sourceRepos).toEqual([
+        { name: "repo1", branches: undefined },
+        { name: "repo2", branches: ["main"] },
+      ]);
     });
 
     it("should throw error if target_platform is invalid", () => {

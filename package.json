@@ -2,7 +2,7 @@
   "name": "org-snapshot-mirror",
   "type": "module",
   "version": "1.0.0",
-  "packageManager": "pnpm@10.29.2",
+  "packageManager": "pnpm@10.33.0",
   "description": "GitHub Action to mirror organization repos with snapshot commits",
   "author": "mzwing <mzwing@mzwing.eu.org>",
   "license": "MIT",
@@ -15,6 +15,7 @@
   "main": "dist/index.cjs",
   "scripts": {
     "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --outfile=dist/index.cjs --minify --tree-shaking=true --tsconfig=tsconfig.build.json",
+    "coverage": "make-coverage-badge --output-path badges/coverage.svg",
     "knip": "knip",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
@@ -31,13 +32,14 @@
   "devDependencies": {
     "@antfu/eslint-config": "^7.7.3",
     "@types/node": "^25.5.0",
-    "@typescript/native-preview": "7.0.0-dev.20260329.1",
+    "@typescript/native-preview": "7.0.0-dev.20260331.1",
     "@vitest/coverage-v8": "4.1.2",
     "esbuild": "^0.27.4",
     "eslint": "^10.1.0",
     "eslint-flat-config-utils": "^3.0.2",
     "jiti": "^2.6.1",
-    "knip": "^6.1.0",
+    "knip": "^6.1.1",
+    "make-coverage-badge": "^1.2.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   }

@@ -89,6 +89,57 @@ describe("sync", () => {
     expect(createCnbRepo).toHaveBeenCalledWith("cnb_token", "cnb_org", "repo1", "desc");
   });
 
+  it("should use explicitly configured branches and preserve a target URL that already ends with slash", async () => {
+    const result = await syncRepo({ name: "repo1", branches: ["release", "hotfix"] }, {
+      ...defaultInputs,
+      targetUrl: "https://target.com/",
+    });
+
+    expect(result).toEqual({ success: true });
+    expect(createSnapshotCommits).toHaveBeenCalledWith("/tmp/sync-repo1/repo.git", ["release", "hotfix"], "repo1");
+    expect(pushToTarget).toHaveBeenCalledWith(
+      "/tmp/sync-repo1/repo.git",
+      "https://target.com/repo1.git",
+      "user",
+      "pass",
+      ["release", "hotfix"],
+      "repo1",
+    );
+  });
+
+  it("should log when the CNB repo already exists", async () => {
+    vi.mocked(createCnbRepo).mockResolvedValue({ success: true, alreadyExists: true });
+
+    const result = await syncRepo({ name: "repo1" }, {
+      ...defaultInputs,
+      targetPlatform: "cnb",
+      cnbApiToken: "cnb_token",
+      cnbOrgPath: "cnb_org",
+    });
+
+    expect(result).toEqual({ success: true });
+    expect(logWithPrefix).toHaveBeenCalledWith("repo1", "Repo already exists on CNB");
+  });
+
+  it("should fail when CNB repo creation fails", async () => {
+    vi.mocked(createCnbRepo).mockResolvedValue({ success: false, alreadyExists: false, error: "permission denied" });
+
+    const result = await syncRepo({ name: "repo1" }, {
+      ...defaultInputs,
+      targetPlatform: "cnb",
+      cnbApiToken: "cnb_token",
+      cnbOrgPath: "cnb_org",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Failed to create CNB repo: permission denied",
+    });
+    expect(createTempDir).not.toHaveBeenCalled();
+    expect(cleanupDir).not.toHaveBeenCalled();
+    expect(errorWithPrefix).toHaveBeenCalledWith("repo1", "Sync failed: Failed to create CNB repo: permission denied");
+  });
+
   it("should fail if CNB inputs are missing", async () => {
     const inputs = {
       ...defaultInputs,
